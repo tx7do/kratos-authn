@@ -65,7 +65,7 @@ type IDToken struct {
 	distributedClaims map[string]claimSource
 }
 
-// Claims unmarshals the raw JSON payload of the ID Token into a provided struct.
+// Claims unmarshal the raw JSON payload of the ID Token into a provided struct.
 //
 //	idToken, err := idTokenVerifier.Verify(rawIDToken)
 //	if err != nil {

@@ -1,6 +1,6 @@
 package utils
 
-var (
+const (
 	HeaderAuthorize = "Authorization"
 
 	BearerWord = "Bearer"

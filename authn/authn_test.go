@@ -3,15 +3,16 @@ package authn
 import (
 	"context"
 	"fmt"
-	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/tx7do/kratos-authn/engine"
 	"net/http"
 	"testing"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/transport"
+
 	jwt4 "github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/jwt"
 	"github.com/tx7do/kratos-authn/engine/utils"
 )

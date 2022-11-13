@@ -2,8 +2,6 @@ module github.com/tx7do/kratos-authn/engine/presharedkey
 
 go 1.19
 
-replace github.com/tx7do/kratos-authn => ../../
-
 require (
 	github.com/go-kratos/kratos/v2 v2.5.3
 	github.com/stretchr/testify v1.8.1
@@ -22,3 +20,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/tx7do/kratos-authn => ../../

@@ -2,7 +2,7 @@ module github.com/tx7do/kratos-authn/engine/noop
 
 go 1.19
 
-require github.com/tx7do/kratos-authn v0.0.2
+require github.com/tx7do/kratos-authn v0.0.3
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

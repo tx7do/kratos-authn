@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/go-kratos/kratos/v2 v2.5.3
 	github.com/stretchr/testify v1.8.1
-	github.com/tx7do/kratos-authn v0.0.3
+	github.com/tx7do/kratos-authn v0.0.4
 )
 
 require (

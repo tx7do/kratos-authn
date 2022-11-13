@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/stretchr/testify v1.8.1
-	github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221113075312-8064b9529ab8
+	github.com/tx7do/kratos-authn/engine/jwt v0.0.1
 	google.golang.org/grpc v1.50.1
 )
 

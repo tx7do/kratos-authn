@@ -103,6 +103,8 @@ github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221113094443-0674ebc7a3b3 h1:8
 github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221113094443-0674ebc7a3b3/go.mod h1:0wnF4FT2ZuWnPFSYDoU90mBv/OOTbyoPiHcx5d/I2h4=
 github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221130122335-b81e944488bf h1:r0qImM7CeZARgMcaqJN1akfYEzK8tRgsZSobFZ6JPvY=
 github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221130122335-b81e944488bf/go.mod h1:FvvG+lBhYvqlFkCxtEyRbuZrt0HWM+wAf7Y3+x/JP/w=
+github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221130122723-a3cd19e86f68 h1:jyJ6XpoCnHKkjWWBNzYLIoHQfpUg0G+t0YXy8Vy4P4g=
+github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20221130122723-a3cd19e86f68/go.mod h1:FvvG+lBhYvqlFkCxtEyRbuZrt0HWM+wAf7Y3+x/JP/w=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.opentelemetry.io/otel v1.7.0/go.mod h1:5BdUoMIz5WEs0vt0CUEMtSSaTSHBBVwrhnz7+nrD5xk=

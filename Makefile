@@ -1,6 +1,6 @@
 APP_VERSION=v0.0.1
 
-PACKAGE_LIST = engine/presharedkey/ engine/noop/ engine/oidc/ engine/jwt/ authn/
+PACKAGE_LIST = engine/presharedkey/ engine/oidc/ engine/jwt/ middleware/
 
 .PHONY: tag
 tag:

@@ -10,4 +10,8 @@ cd ..\..\engine\presharedkey\
 go get all
 go mod tidy
 
+cd ..\..\middleware\
+go get all
+go mod tidy
+
 pause

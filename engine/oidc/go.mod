@@ -3,7 +3,7 @@ module github.com/tx7do/kratos-authn/engine/oidc
 go 1.19
 
 require (
-	github.com/MicahParks/keyfunc v1.7.0
+	github.com/MicahParks/keyfunc v1.8.0
 	github.com/go-kratos/kratos/v2 v2.5.3
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/hashicorp/go-retryablehttp v0.7.1

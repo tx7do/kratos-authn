@@ -1,7 +1,9 @@
 # kratos-authn
 
-## Pre-shared Key (PSK)
+对认证的一个封装，并提供Kratos的中间件。
 
-## OpenID Connect (OIDC)
+## 支持引擎
 
-## JSON Web Token (JWT)
+- [Pre-shared Key (PSK)](https://en.wikipedia.org/wiki/Pre-shared_key)
+- [OpenID Connect (OIDC)](https://openid.net/connect/)
+- [JSON Web Token (JWT)](https://jwt.io/)

@@ -3,7 +3,7 @@ module github.com/tx7do/kratos-authn
 go 1.19
 
 require (
-	github.com/go-kratos/kratos/v2 v2.5.3
+	github.com/go-kratos/kratos/v2 v2.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	google.golang.org/grpc v1.51.0

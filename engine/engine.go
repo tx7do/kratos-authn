@@ -20,8 +20,11 @@ type Authenticator interface {
 	// AuthenticateToken returns a nil error and the AuthClaims info (if available).
 	AuthenticateToken(token string) (*AuthClaims, error)
 
-	// CreateIdentity inject user claims into context.
-	CreateIdentity(requestContext context.Context, contextType ContextType, claims AuthClaims) (string, error)
+	// CreateIdentityWithContext inject user claims into context.
+	CreateIdentityWithContext(requestContext context.Context, contextType ContextType, claims AuthClaims) (context.Context, error)
+
+	// CreateIdentity inject user claims into token string.
+	CreateIdentity(claims AuthClaims) (string, error)
 
 	// Close Cleans up the authenticator.
 	Close()

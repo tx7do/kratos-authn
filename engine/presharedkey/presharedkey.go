@@ -71,9 +71,17 @@ func (pka *Authenticator) getRandomKey() string {
 	return ""
 }
 
-func (pka *Authenticator) CreateIdentity(requestContext context.Context, contextType engine.ContextType, _ engine.AuthClaims) (string, error) {
+func (pka *Authenticator) CreateIdentityWithContext(ctx context.Context, contextType engine.ContextType, claims engine.AuthClaims) (context.Context, error) {
+	token, err := pka.CreateIdentity(claims)
+	if err != nil {
+		return ctx, err
+	}
+	ctx = utils.MDWithAuth(ctx, utils.BearerWord, token, contextType)
+	return ctx, nil
+}
+
+func (pka *Authenticator) CreateIdentity(_ engine.AuthClaims) (string, error) {
 	token := pka.getRandomKey()
-	utils.MDWithAuth(requestContext, utils.BearerWord, token, contextType)
 	return token, nil
 }
 

@@ -1,4 +1,4 @@
-package mocks
+package oidc
 
 import (
 	"crypto/rand"

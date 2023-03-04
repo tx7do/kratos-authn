@@ -3,7 +3,7 @@ package jwt
 import (
 	"context"
 
-	"github.com/golang-jwt/jwt/v4"
+	jwtSdk "github.com/golang-jwt/jwt/v4"
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/utils"
@@ -25,32 +25,32 @@ func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	}
 
 	if auth.options.signingMethod == nil {
-		auth.options.signingMethod = jwt.SigningMethodHS256
+		auth.options.signingMethod = jwtSdk.SigningMethodHS256
 	}
 
 	return auth, nil
 }
 
-func (a *Authenticator) Authenticate(ctx context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
+func (jwt *Authenticator) Authenticate(ctx context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
 	tokenString, err := utils.AuthFromMD(ctx, utils.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
 
-	return a.AuthenticateToken(tokenString)
+	return jwt.AuthenticateToken(tokenString)
 }
 
-func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
-	jwtToken, err := a.parseToken(token)
+func (jwt *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
+	jwtToken, err := jwt.parseToken(token)
 	if err != nil {
-		ve, ok := err.(*jwt.ValidationError)
+		ve, ok := err.(*jwtSdk.ValidationError)
 		if !ok {
 			return nil, engine.ErrUnauthenticated
 		}
-		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+		if ve.Errors&jwtSdk.ValidationErrorMalformed != 0 {
 			return nil, engine.ErrInvalidToken
 		}
-		if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+		if ve.Errors&(jwtSdk.ValidationErrorExpired|jwtSdk.ValidationErrorNotValidYet) != 0 {
 			return nil, engine.ErrTokenExpired
 		}
 		return nil, engine.ErrInvalidToken
@@ -59,14 +59,14 @@ func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, err
 	if !jwtToken.Valid {
 		return nil, engine.ErrInvalidToken
 	}
-	if jwtToken.Method != a.options.signingMethod {
+	if jwtToken.Method != jwt.options.signingMethod {
 		return nil, engine.ErrUnsupportedSigningMethod
 	}
 	if jwtToken.Claims == nil {
 		return nil, engine.ErrInvalidClaims
 	}
 
-	claims, ok := jwtToken.Claims.(jwt.MapClaims)
+	claims, ok := jwtToken.Claims.(jwtSdk.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}
@@ -79,43 +79,52 @@ func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, err
 	return authClaims, nil
 }
 
-func (a *Authenticator) CreateIdentity(ctx context.Context, contextType engine.ContextType, claims engine.AuthClaims) (string, error) {
-	token := jwt.NewWithClaims(a.options.signingMethod, utils.AuthClaimsToJwtClaims(claims))
+func (jwt *Authenticator) CreateIdentityWithContext(ctx context.Context, contextType engine.ContextType, claims engine.AuthClaims) (context.Context, error) {
+	strToken, err := jwt.CreateIdentity(claims)
+	if err != nil {
+		return ctx, err
+	}
 
-	tokenStr, err := a.generateToken(token)
+	ctx = utils.MDWithAuth(ctx, utils.BearerWord, strToken, contextType)
+
+	return ctx, nil
+}
+
+func (jwt *Authenticator) CreateIdentity(claims engine.AuthClaims) (string, error) {
+	jwtToken := jwtSdk.NewWithClaims(jwt.options.signingMethod, utils.AuthClaimsToJwtClaims(claims))
+
+	strToken, err := jwt.generateToken(jwtToken)
 	if err != nil {
 		return "", err
 	}
 
-	utils.MDWithAuth(ctx, utils.BearerWord, tokenStr, contextType)
-
-	return tokenStr, nil
+	return strToken, nil
 }
 
-func (a *Authenticator) Close() {}
+func (jwt *Authenticator) Close() {}
 
-func (a *Authenticator) parseToken(token string) (*jwt.Token, error) {
-	if a.options.keyFunc == nil {
+func (jwt *Authenticator) parseToken(token string) (*jwtSdk.Token, error) {
+	if jwt.options.keyFunc == nil {
 		return nil, engine.ErrMissingKeyFunc
 	}
 
-	return jwt.Parse(token, a.options.keyFunc)
+	return jwtSdk.Parse(token, jwt.options.keyFunc)
 }
 
-func (a *Authenticator) generateToken(token *jwt.Token) (string, error) {
-	if a.options.keyFunc == nil {
+func (jwt *Authenticator) generateToken(jwtToken *jwtSdk.Token) (string, error) {
+	if jwt.options.keyFunc == nil {
 		return "", engine.ErrMissingKeyFunc
 	}
 
-	key, err := a.options.keyFunc(token)
+	key, err := jwt.options.keyFunc(jwtToken)
 	if err != nil {
 		return "", engine.ErrGetKeyFailed
 	}
 
-	tokenStr, err := token.SignedString(key)
+	strToken, err := jwtToken.SignedString(key)
 	if err != nil {
 		return "", engine.ErrSignTokenFailed
 	}
 
-	return tokenStr, nil
+	return strToken, nil
 }

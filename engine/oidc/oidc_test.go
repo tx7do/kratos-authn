@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"github.com/tx7do/kratos-authn/engine"
 	"net/http"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tx7do/kratos-authn/engine/mocks"
+	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
@@ -53,7 +52,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 	const localOIDCServerURL = "http://localhost:8083"
 	const audience = "kratos.dev"
 
-	trustedIssuerServer, err := mocks.NewMockOidcServer(localOIDCServerURL)
+	trustedIssuerServer, err := NewMockOidcServer(localOIDCServerURL)
 	require.NoError(t, err)
 
 	auth, err := NewAuthenticator(
@@ -87,7 +86,7 @@ func TestBuildServerWithOIDCAuthentication(t *testing.T) {
 	const localOIDCServerURL = "http://localhost:8083"
 	const audience = "kratos.dev"
 
-	trustedIssuerServer, err := mocks.NewMockOidcServer(localOIDCServerURL)
+	trustedIssuerServer, err := NewMockOidcServer(localOIDCServerURL)
 	require.NoError(t, err)
 
 	trustedToken, err := trustedIssuerServer.GetToken(audience, "user_name")

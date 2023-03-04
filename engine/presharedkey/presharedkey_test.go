@@ -62,7 +62,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		Scopes:  make(engine.ScopeSet),
 	}
 
-	outToken, err := auth.CreateIdentity(ctx, engine.ContextTypeKratosMetaData, principal)
+	outToken, err := auth.CreateIdentity(principal)
 	assert.Nil(t, err)
 	assert.Equal(t, token, outToken)
 

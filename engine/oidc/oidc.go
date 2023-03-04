@@ -123,7 +123,11 @@ func (oidc *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, 
 	return principal, nil
 }
 
-func (oidc *Authenticator) CreateIdentity(_ context.Context, _ engine.ContextType, _ engine.AuthClaims) (string, error) {
+func (oidc *Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {
+	return ctx, nil
+}
+
+func (oidc *Authenticator) CreateIdentity(_ engine.AuthClaims) (string, error) {
 	return "", nil
 }
 

@@ -24,7 +24,11 @@ func (n Authenticator) AuthenticateToken(_ string) (*engine.AuthClaims, error) {
 	}, nil
 }
 
-func (n Authenticator) CreateIdentity(_ context.Context, _ engine.ContextType, _ engine.AuthClaims) (string, error) {
+func (n Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {
+	return ctx, nil
+}
+
+func (n Authenticator) CreateIdentity(_ engine.AuthClaims) (string, error) {
 	return "", nil
 }
 

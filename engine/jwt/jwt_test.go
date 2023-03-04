@@ -62,7 +62,7 @@ func TestAuthenticator(t *testing.T) {
 	principal.Scopes["local:admin:user_name"] = true
 	principal.Scopes["tenant:admin:user_name"] = true
 
-	outToken, err := auth.CreateIdentity(ctx, engine.ContextTypeKratosMetaData, principal)
+	outToken, err := auth.CreateIdentity(principal)
 	assert.Nil(t, err)
 	assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6ImxvY2FsOmFkbWluOnVzZXJfbmFtZSB0ZW5hbnQ6YWRtaW46dXNlcl9uYW1lIiwic3ViIjoidXNlcl9uYW1lIn0.ln7zjnOKrhZCsAaQQf6vodIz5urxkVphOo7EpI7tv7Y", outToken)
 

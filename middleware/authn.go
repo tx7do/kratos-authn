@@ -7,7 +7,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 // Server is a server authenticator middleware.
@@ -33,14 +32,12 @@ func Client(authenticator engine.Authenticator, opts ...Option) middleware.Middl
 		opt(o)
 	}
 
-	token, err := authenticator.CreateIdentity(context.Background(), engine.ContextTypeKratosMetaData, o.claims)
-	if err != nil {
-		log.Errorf("authenticator middleware create token failed: %s", err.Error())
-	}
-
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			ctx = utils.MDWithAuth(ctx, utils.BearerWord, token, engine.ContextTypeKratosMetaData)
+			var err error
+			if ctx, err = authenticator.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, o.claims); err != nil {
+				log.Errorf("authenticator middleware create token failed: %s", err.Error())
+			}
 			return handler(ctx, req)
 		}
 	}

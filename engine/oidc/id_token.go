@@ -46,7 +46,7 @@ type IDToken struct {
 
 	// Initial nonce provided during the authentication redirect.
 	//
-	// This package does NOT provide verification on the value of this field
+	// This package does NOT provide verification on the value of this field,
 	// and it's the user's responsibility to ensure it contains a valid value.
 	Nonce string
 

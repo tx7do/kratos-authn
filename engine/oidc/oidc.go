@@ -23,7 +23,7 @@ var (
 )
 
 var _ engine.Authenticator = (*Authenticator)(nil)
-var _ OIDCAuthenticator = (*Authenticator)(nil)
+var _ Configurator = (*Authenticator)(nil)
 
 type Authenticator struct {
 	options *Options

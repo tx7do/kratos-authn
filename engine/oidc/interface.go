@@ -2,7 +2,7 @@ package oidc
 
 import "github.com/MicahParks/keyfunc"
 
-type OIDCAuthenticator interface {
+type Configurator interface {
 	GetConfiguration() (*ProviderConfig, error)
 	GetKeys() (*keyfunc.JWKS, error)
 }

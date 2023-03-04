@@ -127,7 +127,10 @@ func TestServer(t *testing.T) {
 				return "reply", nil
 			}
 
-			authenticator, err := jwt.NewAuthenticator(testKey, test.alg)
+			authenticator, err := jwt.NewAuthenticator(
+				jwt.WithKey([]byte(testKey)),
+				jwt.WithSigningMethod(test.alg),
+			)
 			assert.Nil(t, err)
 
 			server := Server(authenticator)(next)
@@ -168,7 +171,10 @@ func TestClient(t *testing.T) {
 				return "reply", nil
 			}
 
-			authenticator, err := jwt.NewAuthenticator(testKey, "HS256")
+			authenticator, err := jwt.NewAuthenticator(
+				jwt.WithKey([]byte(testKey)),
+				jwt.WithSigningMethod("HS256"),
+			)
 			assert.Nil(t, err)
 
 			principal := engine.AuthClaims{

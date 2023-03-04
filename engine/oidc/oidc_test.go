@@ -110,7 +110,7 @@ func TestBuildServerWithOIDCAuthentication(t *testing.T) {
 	assert.NotNil(t, auth)
 	fmt.Printf("%T", auth)
 
-	oidcAuth, _ := auth.(OIDCAuthenticator)
+	oidcAuth, _ := auth.(Configurator)
 	keys, err := oidcAuth.GetKeys()
 	assert.Nil(t, err)
 	assert.NotNil(t, keys)

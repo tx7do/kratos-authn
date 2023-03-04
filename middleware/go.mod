@@ -9,7 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tx7do/kratos-authn v0.0.8
-	github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230304055335-851b314810f0
+	github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230304055640-bfb6ad985de8
 )
 
 require (

@@ -79,7 +79,11 @@ func (oidc *Authenticator) Authenticate(requestContext context.Context, contextT
 	//	return nil, engine.ErrInvalidToken
 	//}
 
-	token, err := oidc.parseToken(tokenString)
+	return oidc.AuthenticateToken(tokenString)
+}
+
+func (oidc *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
+	jwtToken, err := oidc.parseToken(token)
 	if err != nil {
 		ve, ok := err.(*jwt.ValidationError)
 		if !ok {
@@ -94,11 +98,11 @@ func (oidc *Authenticator) Authenticate(requestContext context.Context, contextT
 		return nil, engine.ErrInvalidToken
 	}
 
-	if !token.Valid {
+	if !jwtToken.Valid {
 		return nil, engine.ErrInvalidToken
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}

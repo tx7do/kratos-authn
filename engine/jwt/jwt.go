@@ -37,7 +37,11 @@ func (a *Authenticator) Authenticate(ctx context.Context, contextType engine.Con
 		return nil, engine.ErrMissingBearerToken
 	}
 
-	token, err := a.parseToken(tokenString)
+	return a.AuthenticateToken(tokenString)
+}
+
+func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
+	jwtToken, err := a.parseToken(token)
 	if err != nil {
 		ve, ok := err.(*jwt.ValidationError)
 		if !ok {
@@ -52,17 +56,17 @@ func (a *Authenticator) Authenticate(ctx context.Context, contextType engine.Con
 		return nil, engine.ErrInvalidToken
 	}
 
-	if !token.Valid {
+	if !jwtToken.Valid {
 		return nil, engine.ErrInvalidToken
 	}
-	if token.Method != a.options.signingMethod {
+	if jwtToken.Method != a.options.signingMethod {
 		return nil, engine.ErrUnsupportedSigningMethod
 	}
-	if token.Claims == nil {
+	if jwtToken.Claims == nil {
 		return nil, engine.ErrInvalidClaims
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}

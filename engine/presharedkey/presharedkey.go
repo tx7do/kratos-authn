@@ -2,6 +2,7 @@ package presharedkey
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 
 	"github.com/tx7do/kratos-authn/engine"
@@ -36,7 +37,15 @@ func (pka *Authenticator) Authenticate(ctx context.Context, contextType engine.C
 		return nil, engine.ErrMissingBearerToken
 	}
 
-	if _, found := pka.options.ValidKeys[tokenString]; found {
+	return pka.AuthenticateToken(tokenString)
+}
+
+func (pka *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
+	if len(pka.options.ValidKeys) < 1 {
+		return nil, errors.New("invalid auth configuration, please specify at least one key")
+	}
+
+	if _, found := pka.options.ValidKeys[token]; found {
 		return &engine.AuthClaims{
 			Subject: "",
 		}, nil

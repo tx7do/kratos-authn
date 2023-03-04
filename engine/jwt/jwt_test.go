@@ -49,7 +49,10 @@ func TestAuthenticator(t *testing.T) {
 	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
 	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
 
-	auth, err := NewAuthenticator("test", "HS256")
+	auth, err := NewAuthenticator(
+		WithKey([]byte("test")),
+		WithSigningMethod("HS256"),
+	)
 	assert.Nil(t, err)
 
 	principal := engine.AuthClaims{
@@ -59,7 +62,7 @@ func TestAuthenticator(t *testing.T) {
 	principal.Scopes["local:admin:user_name"] = true
 	principal.Scopes["tenant:admin:user_name"] = true
 
-	outToken, err := auth.CreateIdentity(ctx, principal)
+	outToken, err := auth.CreateIdentity(ctx, engine.ContextTypeKratosMetaData, principal)
 	assert.Nil(t, err)
 	assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6ImxvY2FsOmFkbWluOnVzZXJfbmFtZSB0ZW5hbnQ6YWRtaW46dXNlcl9uYW1lIiwic3ViIjoidXNlcl9uYW1lIn0.ln7zjnOKrhZCsAaQQf6vodIz5urxkVphOo7EpI7tv7Y", outToken)
 
@@ -77,7 +80,7 @@ func TestAuthenticator(t *testing.T) {
 		header.RequestHeader().Set("Authorization", token)
 	}
 
-	authToken, err := auth.Authenticate(ctx)
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
 	assert.Equal(t, "user_name", authToken.Subject)
 	assert.True(t, authToken.Scopes["local:admin:user_name"])

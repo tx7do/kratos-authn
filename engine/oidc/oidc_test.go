@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"github.com/tx7do/kratos-authn/engine"
 	"net/http"
 	"testing"
 
@@ -55,7 +56,11 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 	trustedIssuerServer, err := mocks.NewMockOidcServer(localOIDCServerURL)
 	require.NoError(t, err)
 
-	auth, err := NewAuthenticator(localOIDCServerURL, audience, "RS256")
+	auth, err := NewAuthenticator(
+		WithIssuerURL(localOIDCServerURL),
+		WithAudience(audience),
+		WithSigningMethod("RS256"),
+	)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
 
@@ -67,7 +72,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+trustedToken)
 	}
 
-	authToken, err := auth.Authenticate(ctx)
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
 	assert.Equal(t, "user_name", authToken.Subject)
 	fmt.Println(authToken)
@@ -96,7 +101,11 @@ func TestBuildServerWithOIDCAuthentication(t *testing.T) {
 		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+trustedToken)
 	}
 
-	auth, err := NewAuthenticator(localOIDCServerURL, audience, "RS256")
+	auth, err := NewAuthenticator(
+		WithIssuerURL(localOIDCServerURL),
+		WithAudience(audience),
+		WithSigningMethod("RS256"),
+	)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
 	fmt.Printf("%T", auth)

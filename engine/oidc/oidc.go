@@ -26,8 +26,7 @@ var _ engine.Authenticator = (*Authenticator)(nil)
 var _ OIDCAuthenticator = (*Authenticator)(nil)
 
 type Authenticator struct {
-	IssuerURL string
-	Audience  string
+	options *Options
 
 	JwksURI string
 	JWKs    *keyfunc.JWKS
@@ -37,16 +36,19 @@ type Authenticator struct {
 	httpClient *http.Client
 }
 
-func NewAuthenticator(issuerURL, audience, alg string) (engine.Authenticator, error) {
+func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	oidc := &Authenticator{
-		IssuerURL:     issuerURL,
-		Audience:      audience,
-		httpClient:    retryablehttp.NewClient().StandardClient(),
-		signingMethod: jwt.GetSigningMethod(alg),
+		options: &Options{},
+
+		httpClient: retryablehttp.NewClient().StandardClient(),
 	}
 
-	if oidc.signingMethod == nil {
-		oidc.signingMethod = jwt.SigningMethodRS256
+	for _, o := range opts {
+		o(oidc.options)
+	}
+
+	if oidc.options.signingMethod == nil {
+		oidc.options.signingMethod = jwt.SigningMethodRS256
 	}
 
 	if err := oidc.fetchKeys(); err != nil {
@@ -62,8 +64,8 @@ func (oidc *Authenticator) parseToken(token string) (*jwt.Token, error) {
 	return jwt.Parse(token, oidc.JWKs.Keyfunc)
 }
 
-func (oidc *Authenticator) Authenticate(requestContext context.Context) (*engine.AuthClaims, error) {
-	tokenString, err := utils.AuthFromMD(requestContext, utils.BearerWord, false)
+func (oidc *Authenticator) Authenticate(requestContext context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
+	tokenString, err := utils.AuthFromMD(requestContext, utils.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
@@ -101,11 +103,11 @@ func (oidc *Authenticator) Authenticate(requestContext context.Context) (*engine
 		return nil, engine.ErrInvalidClaims
 	}
 
-	if ok := claims.VerifyIssuer(oidc.IssuerURL, true); !ok {
+	if ok := claims.VerifyIssuer(oidc.options.IssuerURL, true); !ok {
 		return nil, engine.ErrInvalidIssuer
 	}
 
-	if ok := claims.VerifyAudience(oidc.Audience, true); !ok {
+	if ok := claims.VerifyAudience(oidc.options.Audience, true); !ok {
 		return nil, engine.ErrInvalidAudience
 	}
 
@@ -117,7 +119,7 @@ func (oidc *Authenticator) Authenticate(requestContext context.Context) (*engine
 	return principal, nil
 }
 
-func (oidc *Authenticator) CreateIdentity(_ context.Context, _ engine.AuthClaims) (string, error) {
+func (oidc *Authenticator) CreateIdentity(_ context.Context, _ engine.ContextType, _ engine.AuthClaims) (string, error) {
 	return "", nil
 }
 
@@ -155,7 +157,7 @@ func (oidc *Authenticator) GetKeys() (*keyfunc.JWKS, error) {
 }
 
 func (oidc *Authenticator) getDiscoveryUri() string {
-	return strings.TrimSuffix(oidc.IssuerURL, "/") + "/.well-known/openid-configuration"
+	return strings.TrimSuffix(oidc.options.IssuerURL, "/") + "/.well-known/openid-configuration"
 }
 
 func (oidc *Authenticator) GetConfiguration() (*ProviderConfig, error) {

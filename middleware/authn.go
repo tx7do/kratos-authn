@@ -14,7 +14,7 @@ import (
 func Server(authenticator engine.Authenticator) middleware.Middleware {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			claims, err := authenticator.Authenticate(ctx)
+			claims, err := authenticator.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 			if err != nil {
 				return nil, err
 			}
@@ -33,14 +33,14 @@ func Client(authenticator engine.Authenticator, opts ...Option) middleware.Middl
 		opt(o)
 	}
 
-	token, err := authenticator.CreateIdentity(context.Background(), o.claims)
+	token, err := authenticator.CreateIdentity(context.Background(), engine.ContextTypeKratosMetaData, o.claims)
 	if err != nil {
 		log.Errorf("authenticator middleware create token failed: %s", err.Error())
 	}
 
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			ctx = utils.MDWithAuth(ctx, utils.BearerWord, token, false)
+			ctx = utils.MDWithAuth(ctx, utils.BearerWord, token, engine.ContextTypeKratosMetaData)
 			return handler(ctx, req)
 		}
 	}

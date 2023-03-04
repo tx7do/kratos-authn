@@ -51,7 +51,9 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 
 	token := "test_token"
 
-	auth, err := NewAuthenticator([]string{token})
+	auth, err := NewAuthenticator(
+		WithKeys([]string{token}),
+	)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
 
@@ -60,7 +62,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		Scopes:  make(engine.ScopeSet),
 	}
 
-	outToken, err := auth.CreateIdentity(ctx, principal)
+	outToken, err := auth.CreateIdentity(ctx, engine.ContextTypeKratosMetaData, principal)
 	assert.Nil(t, err)
 	assert.Equal(t, token, outToken)
 
@@ -76,7 +78,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+token)
 	}
 
-	authToken, err := auth.Authenticate(ctx)
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
 	assert.Equal(t, "", authToken.Subject)
 	fmt.Println(authToken)

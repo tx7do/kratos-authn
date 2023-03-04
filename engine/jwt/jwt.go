@@ -10,29 +10,29 @@ import (
 )
 
 type Authenticator struct {
-	signingMethod jwt.SigningMethod
-	keyFunc       jwt.Keyfunc
+	options *Options
 }
 
 var _ engine.Authenticator = (*Authenticator)(nil)
 
-func NewAuthenticator(key, alg string) (engine.Authenticator, error) {
+func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	auth := &Authenticator{
-		signingMethod: jwt.GetSigningMethod(alg),
-		keyFunc: func(token *jwt.Token) (interface{}, error) {
-			return []byte(key), nil
-		},
+		options: &Options{},
 	}
 
-	if auth.signingMethod == nil {
-		auth.signingMethod = jwt.SigningMethodHS256
+	for _, o := range opts {
+		o(auth.options)
+	}
+
+	if auth.options.signingMethod == nil {
+		auth.options.signingMethod = jwt.SigningMethodHS256
 	}
 
 	return auth, nil
 }
 
-func (a *Authenticator) Authenticate(ctx context.Context) (*engine.AuthClaims, error) {
-	tokenString, err := utils.AuthFromMD(ctx, utils.BearerWord, false)
+func (a *Authenticator) Authenticate(ctx context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
+	tokenString, err := utils.AuthFromMD(ctx, utils.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
@@ -55,7 +55,7 @@ func (a *Authenticator) Authenticate(ctx context.Context) (*engine.AuthClaims, e
 	if !token.Valid {
 		return nil, engine.ErrInvalidToken
 	}
-	if token.Method != a.signingMethod {
+	if token.Method != a.options.signingMethod {
 		return nil, engine.ErrUnsupportedSigningMethod
 	}
 	if token.Claims == nil {
@@ -75,23 +75,39 @@ func (a *Authenticator) Authenticate(ctx context.Context) (*engine.AuthClaims, e
 	return authClaims, nil
 }
 
+func (a *Authenticator) CreateIdentity(ctx context.Context, contextType engine.ContextType, claims engine.AuthClaims) (string, error) {
+	token := jwt.NewWithClaims(a.options.signingMethod, utils.AuthClaimsToJwtClaims(claims))
+
+	tokenStr, err := a.generateToken(token)
+	if err != nil {
+		return "", err
+	}
+
+	utils.MDWithAuth(ctx, utils.BearerWord, tokenStr, contextType)
+
+	return tokenStr, nil
+}
+
+func (a *Authenticator) Close() {}
+
 func (a *Authenticator) parseToken(token string) (*jwt.Token, error) {
-	if a.keyFunc == nil {
+	if a.options.keyFunc == nil {
 		return nil, engine.ErrMissingKeyFunc
 	}
 
-	return jwt.Parse(token, a.keyFunc)
+	return jwt.Parse(token, a.options.keyFunc)
 }
 
 func (a *Authenticator) generateToken(token *jwt.Token) (string, error) {
-	if a.keyFunc == nil {
+	if a.options.keyFunc == nil {
 		return "", engine.ErrMissingKeyFunc
 	}
 
-	key, err := a.keyFunc(token)
+	key, err := a.options.keyFunc(token)
 	if err != nil {
 		return "", engine.ErrGetKeyFailed
 	}
+
 	tokenStr, err := token.SignedString(key)
 	if err != nil {
 		return "", engine.ErrSignTokenFailed
@@ -99,18 +115,3 @@ func (a *Authenticator) generateToken(token *jwt.Token) (string, error) {
 
 	return tokenStr, nil
 }
-
-func (a *Authenticator) CreateIdentity(ctx context.Context, claims engine.AuthClaims) (string, error) {
-	token := jwt.NewWithClaims(a.signingMethod, utils.AuthClaimsToJwtClaims(claims))
-
-	tokenStr, err := a.generateToken(token)
-	if err != nil {
-		return "", err
-	}
-
-	utils.MDWithAuth(ctx, utils.BearerWord, tokenStr, false)
-
-	return tokenStr, nil
-}
-
-func (a *Authenticator) Close() {}

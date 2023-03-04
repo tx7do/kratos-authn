@@ -8,7 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/stretchr/testify v1.8.2
-	github.com/tx7do/kratos-authn v0.0.7
+	github.com/tx7do/kratos-authn v0.0.8
 )
 
 require (

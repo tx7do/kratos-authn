@@ -55,8 +55,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
 github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230304060223-c4ad57a481a3 h1:nhia8sMJHQ9BJMeX1CfiNlL/8f8M4qbf0xl19+AeqZU=
-github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230304060223-c4ad57a481a3/go.mod h1:NvuEb+F/t6xr7w5sVnPagsubZlD4/BJCEAXdiMT9lJI=
+github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230313063240-883399b21d8b h1:oUFUbyix8YDLzwZE4P1xOvKYIO74bXC6rCquGyhLNpE=
+github.com/tx7do/kratos-authn/engine/jwt v0.0.0-20230313063240-883399b21d8b/go.mod h1:cwiu1LJNwhtrmVEoRsmDl9EuKi4MXXVHN5Px2PYKRqs=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.uber.org/atomic v1.4.0/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=

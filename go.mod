@@ -6,7 +6,7 @@ require (
 	github.com/go-kratos/kratos/v2 v2.7.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
-	google.golang.org/grpc v1.58.0
+	google.golang.org/grpc v1.58.1
 )
 
 require (

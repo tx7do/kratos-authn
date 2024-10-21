@@ -7,7 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/go-kratos/kratos/v2 v2.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/tx7do/kratos-authn v1.0.0
+	github.com/tx7do/kratos-authn v1.1.0
 )
 
 require (

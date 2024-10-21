@@ -8,11 +8,12 @@ import (
 type AuthErrorCode int32
 
 const (
-	AuthErrorCodeAuthFailedInvalidSubject     AuthErrorCode = 1001
-	AuthErrorCodeAuthFailedInvalidAudience    AuthErrorCode = 1002
-	AuthErrorCodeAuthFailedInvalidIssuer      AuthErrorCode = 1003
-	AuthErrorCodeInvalidClaims                AuthErrorCode = 1004
-	AuthErrorCodeAuthFailedInvalidBearerToken AuthErrorCode = 1005
+	AuthErrorCodeInvalidClaims                AuthErrorCode = 1001
+	AuthErrorCodeAuthFailedInvalidBearerToken AuthErrorCode = 1002
+	AuthErrorCodeAuthFailedInvalidSubject     AuthErrorCode = 1003
+	AuthErrorCodeAuthFailedInvalidAudience    AuthErrorCode = 1004
+	AuthErrorCodeAuthFailedInvalidIssuer      AuthErrorCode = 1005
+	AuthErrorCodeAuthFailedInvalidExpiration  AuthErrorCode = 1006
 
 	AuthErrorCodeUnauthenticated          AuthErrorCode = 1500
 	AuthErrorCodeBearerTokenMissing       AuthErrorCode = 1010
@@ -27,11 +28,12 @@ const (
 )
 
 var (
-	ErrInvalidSubject  = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidSubject), "invalid subject")
-	ErrInvalidAudience = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidAudience), "invalid audience")
-	ErrInvalidIssuer   = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidIssuer), "invalid issuer")
-	ErrInvalidClaims   = status.Error(codes.Code(AuthErrorCodeInvalidClaims), "invalid claims")
-	ErrInvalidToken    = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidBearerToken), "invalid bearer token")
+	ErrInvalidSubject    = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidSubject), "invalid subject")
+	ErrInvalidAudience   = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidAudience), "invalid audience")
+	ErrInvalidIssuer     = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidIssuer), "invalid issuer")
+	ErrInvalidExpiration = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidExpiration), "invalid expiration")
+	ErrInvalidClaims     = status.Error(codes.Code(AuthErrorCodeInvalidClaims), "invalid claims")
+	ErrInvalidToken      = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidBearerToken), "invalid bearer token")
 
 	ErrMissingBearerToken       = status.Error(codes.Code(AuthErrorCodeBearerTokenMissing), "missing bearer token")
 	ErrUnauthenticated          = status.Error(codes.Code(AuthErrorCodeUnauthenticated), "unauthenticated")

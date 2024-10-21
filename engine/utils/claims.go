@@ -14,6 +14,16 @@ func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwtV5.Claims {
 		"sub": raw.Subject,
 	}
 
+	if raw.Issuer != "" {
+		claims["iss"] = raw.Issuer
+	}
+	if raw.Audience != "" {
+		claims["aud"] = raw.Audience
+	}
+	if raw.Expiration != "" {
+		claims["exp"] = raw.Expiration
+	}
+
 	var buffer bytes.Buffer
 	count := len(raw.Scopes)
 	idx := 0
@@ -33,17 +43,33 @@ func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwtV5.Claims {
 }
 
 func MapClaimsToAuthClaims(rawClaims jwtV5.MapClaims) (*engine.AuthClaims, error) {
-	// optional subject
-	var subject = ""
+	claims := &engine.AuthClaims{
+		Scopes: make(engine.ScopeSet),
+	}
+
+	// optional Subject
 	if subjectClaim, ok := rawClaims["sub"]; ok {
-		if subject, ok = subjectClaim.(string); !ok {
+		if claims.Subject, ok = subjectClaim.(string); !ok {
 			return nil, engine.ErrInvalidSubject
 		}
 	}
-
-	claims := &engine.AuthClaims{
-		Subject: subject,
-		Scopes:  make(engine.ScopeSet),
+	// optional Issuer
+	if issuerClaim, ok := rawClaims["iss"]; ok {
+		if claims.Issuer, ok = issuerClaim.(string); !ok {
+			return nil, engine.ErrInvalidIssuer
+		}
+	}
+	// optional Audience
+	if audienceClaim, ok := rawClaims["aud"]; ok {
+		if claims.Audience, ok = audienceClaim.(string); !ok {
+			return nil, engine.ErrInvalidAudience
+		}
+	}
+	// optional Expiration
+	if expirationClaim, ok := rawClaims["exp"]; ok {
+		if claims.Expiration, ok = expirationClaim.(string); !ok {
+			return nil, engine.ErrInvalidExpiration
+		}
 	}
 
 	// optional scopes

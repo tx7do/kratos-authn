@@ -15,7 +15,10 @@ type ScopeSet map[string]bool
 // AuthClaims contains claims that are included in OIDC standard claims.
 // See https://openid.net/specs/openid-connect-core-1_0.html#IDToken
 type AuthClaims struct {
-	Subject string
+	Issuer     string
+	Subject    string
+	Audience   string
+	Expiration string
 
 	// Scopes see: https://datatracker.ietf.org/doc/html/rfc6749#section-3.3
 	Scopes ScopeSet

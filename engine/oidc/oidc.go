@@ -8,19 +8,19 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/MicahParks/keyfunc"
-	"github.com/golang-jwt/jwt/v4"
+	keyfuncV3 "github.com/MicahParks/keyfunc/v3"
+	jwtV5 "github.com/golang-jwt/jwt/v5"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
-var (
-	jwkRefreshInterval, _ = time.ParseDuration("48h")
-)
+//var (
+//	jwkRefreshInterval, _ = time.ParseDuration("48h")
+//)
 
 var _ engine.Authenticator = (*Authenticator)(nil)
 var _ Configurator = (*Authenticator)(nil)
@@ -29,17 +29,16 @@ type Authenticator struct {
 	options *Options
 
 	JwksURI string
-	JWKs    *keyfunc.JWKS
+	JWKs    keyfuncV3.Keyfunc
 
-	signingMethod jwt.SigningMethod
+	signingMethod jwtV5.SigningMethod
 
 	httpClient *http.Client
 }
 
 func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	oidc := &Authenticator{
-		options: &Options{},
-
+		options:    &Options{},
 		httpClient: retryablehttp.NewClient().StandardClient(),
 	}
 
@@ -48,7 +47,7 @@ func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	}
 
 	if oidc.options.signingMethod == nil {
-		oidc.options.signingMethod = jwt.SigningMethodRS256
+		oidc.options.signingMethod = jwtV5.SigningMethodRS256
 	}
 
 	if err := oidc.fetchKeys(); err != nil {
@@ -60,59 +59,71 @@ func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	return oidc, nil
 }
 
-func (oidc *Authenticator) parseToken(token string) (*jwt.Token, error) {
-	return jwt.Parse(token, oidc.JWKs.Keyfunc)
+func (a *Authenticator) parseToken(token string) (*jwtV5.Token, error) {
+	return jwtV5.Parse(token, a.JWKs.Keyfunc)
 }
 
-func (oidc *Authenticator) Authenticate(requestContext context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
+func (a *Authenticator) Authenticate(requestContext context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
 	tokenString, err := utils.AuthFromMD(requestContext, utils.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
 
-	//jwtParser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
+	//jwtParser := jwtV5.NewParser(jwtV5.WithValidMethods([]string{"RS256"}))
 	//
-	//token, err := jwtParser.Parse(tokenString, func(token *jwt.Token) (any, error) {
-	//	return oidc.JWKs.Keyfunc(token)
+	//token, err := jwtParser.Parse(tokenString, func(token *jwtV5.Token) (any, error) {
+	//	return a.JWKs.Keyfunc(token)
 	//})
 	//if err != nil {
 	//	return nil, engine.ErrInvalidToken
 	//}
 
-	return oidc.AuthenticateToken(tokenString)
+	return a.AuthenticateToken(tokenString)
 }
 
-func (oidc *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
-	jwtToken, err := oidc.parseToken(token)
+func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
+	jwtToken, err := a.parseToken(token)
+
+	if jwtToken == nil {
+		return nil, engine.ErrInvalidToken
+	}
+
 	if err != nil {
-		ve, ok := err.(*jwt.ValidationError)
-		if !ok {
-			return nil, engine.ErrUnauthenticated
-		}
-		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+		switch {
+		case errors.Is(err, jwtV5.ErrTokenMalformed):
+			return nil, engine.ErrInvalidToken
+		case errors.Is(err, jwtV5.ErrTokenSignatureInvalid):
+			return nil, engine.ErrSignTokenFailed
+		case errors.Is(err, jwtV5.ErrTokenExpired) || errors.Is(err, jwtV5.ErrTokenNotValidYet):
+			return nil, engine.ErrTokenExpired
+		default:
 			return nil, engine.ErrInvalidToken
 		}
-		if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-			return nil, engine.ErrTokenExpired
-		}
-		return nil, engine.ErrInvalidToken
 	}
 
 	if !jwtToken.Valid {
 		return nil, engine.ErrInvalidToken
 	}
 
-	claims, ok := jwtToken.Claims.(jwt.MapClaims)
+	claims, ok := jwtToken.Claims.(jwtV5.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}
 
-	if ok := claims.VerifyIssuer(oidc.options.IssuerURL, true); !ok {
-		return nil, engine.ErrInvalidIssuer
-	}
-
-	if ok := claims.VerifyAudience(oidc.options.Audience, true); !ok {
-		return nil, engine.ErrInvalidAudience
+	var opts []jwtV5.ParserOption
+	opts = append(opts, jwtV5.WithIssuer(a.options.IssuerURL))
+	opts = append(opts, jwtV5.WithAudience(a.options.Audience))
+	validator := jwtV5.NewValidator(opts...)
+	err = validator.Validate(claims)
+	if err != nil {
+		switch {
+		case errors.Is(err, jwtV5.ErrTokenInvalidAudience):
+			return nil, engine.ErrInvalidAudience
+		case errors.Is(err, jwtV5.ErrTokenInvalidIssuer):
+			return nil, engine.ErrInvalidIssuer
+		default:
+			return nil, engine.ErrInvalidToken
+		}
 	}
 
 	principal, err := utils.MapClaimsToAuthClaims(claims)
@@ -123,64 +134,61 @@ func (oidc *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, 
 	return principal, nil
 }
 
-func (oidc *Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {
+func (a *Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {
 	return ctx, nil
 }
 
-func (oidc *Authenticator) CreateIdentity(_ engine.AuthClaims) (string, error) {
+func (a *Authenticator) CreateIdentity(_ engine.AuthClaims) (string, error) {
 	return "", nil
 }
 
-func (oidc *Authenticator) Close() {
-	oidc.JWKs.EndBackground()
+func (a *Authenticator) Close() {
+	//a.JWKs.EndBackground()
 }
 
-func (oidc *Authenticator) fetchKeys() error {
-	oidcConfig, err := oidc.GetConfiguration()
+func (a *Authenticator) fetchKeys() error {
+	oidcConfig, err := a.GetConfiguration()
 	if err != nil {
 		return fmt.Errorf("error fetching OIDC configuration: %w", err)
 	}
 
-	oidc.JwksURI = oidcConfig.JWKSURL
+	a.JwksURI = oidcConfig.JWKSURL
 
-	jwks, err := oidc.GetKeys()
+	jwks, err := a.GetKeyfunc()
 	if err != nil {
 		return fmt.Errorf("error fetching OIDC keys: %w", err)
 	}
 
-	oidc.JWKs = jwks
+	a.JWKs = jwks
 
 	return nil
 }
 
-func (oidc *Authenticator) GetKeys() (*keyfunc.JWKS, error) {
-	jwks, err := keyfunc.Get(oidc.JwksURI, keyfunc.Options{
-		Client:          oidc.httpClient,
-		RefreshInterval: jwkRefreshInterval,
-	})
+func (a *Authenticator) GetKeyfunc() (keyfuncV3.Keyfunc, error) {
+	jwks, err := keyfuncV3.NewDefault([]string{a.JwksURI})
 	if err != nil {
-		return nil, fmt.Errorf("error fetching keys from %v: %w", oidc.JwksURI, err)
+		return nil, fmt.Errorf("error fetching keys from %v: %w", a.JwksURI, err)
 	}
 	return jwks, nil
 }
 
-func (oidc *Authenticator) getDiscoveryUri() string {
-	return strings.TrimSuffix(oidc.options.IssuerURL, "/") + "/.well-known/openid-configuration"
+func (a *Authenticator) getDiscoveryUri() string {
+	return strings.TrimSuffix(a.options.IssuerURL, "/") + "/.well-known/openid-configuration"
 }
 
-func (oidc *Authenticator) GetConfiguration() (*ProviderConfig, error) {
-	wellKnown := oidc.getDiscoveryUri()
+func (a *Authenticator) GetConfiguration() (*ProviderConfig, error) {
+	wellKnown := a.getDiscoveryUri()
 	req, err := http.NewRequest("GET", wellKnown, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error forming request to get OIDC: %w", err)
 	}
 
-	res, err := oidc.httpClient.Do(req)
+	res, err := a.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error getting OIDC: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+		err = Body.Close()
 		if err != nil {
 			fmt.Println(err)
 		}

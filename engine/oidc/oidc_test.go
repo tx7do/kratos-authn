@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/go-kratos/kratos/v2/transport"
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/utils"
@@ -22,6 +23,16 @@ func (hc headerCarrier) Get(key string) string {
 
 func (hc headerCarrier) Set(key, value string) {
 	http.Header(hc).Set(key, value)
+}
+
+// Add append value to key-values pair.
+func (hc headerCarrier) Add(key string, value string) {
+	http.Header(hc).Add(key, value)
+}
+
+// Values returns a slice of values associated with the passed key.
+func (hc headerCarrier) Values(key string) []string {
+	return http.Header(hc).Values(key)
 }
 
 func (hc headerCarrier) Keys() []string {
@@ -110,7 +121,7 @@ func TestBuildServerWithOIDCAuthentication(t *testing.T) {
 	fmt.Printf("%T", auth)
 
 	oidcAuth, _ := auth.(Configurator)
-	keys, err := oidcAuth.GetKeys()
+	keys, err := oidcAuth.GetKeyfunc()
 	assert.Nil(t, err)
 	assert.NotNil(t, keys)
 

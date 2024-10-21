@@ -2,18 +2,19 @@ package jwt
 
 import (
 	"context"
+	"errors"
 
-	jwtSdk "github.com/golang-jwt/jwt/v4"
+	jwtV5 "github.com/golang-jwt/jwt/v5"
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
+var _ engine.Authenticator = (*Authenticator)(nil)
+
 type Authenticator struct {
 	options *Options
 }
-
-var _ engine.Authenticator = (*Authenticator)(nil)
 
 func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	auth := &Authenticator{
@@ -25,12 +26,13 @@ func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 	}
 
 	if auth.options.signingMethod == nil {
-		auth.options.signingMethod = jwtSdk.SigningMethodHS256
+		auth.options.signingMethod = jwtV5.SigningMethodHS256
 	}
 
 	return auth, nil
 }
 
+// Authenticate authenticates the token string and returns the claims.
 func (jwt *Authenticator) Authenticate(ctx context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
 	tokenString, err := utils.AuthFromMD(ctx, utils.BearerWord, contextType)
 	if err != nil {
@@ -40,20 +42,25 @@ func (jwt *Authenticator) Authenticate(ctx context.Context, contextType engine.C
 	return jwt.AuthenticateToken(tokenString)
 }
 
-func (jwt *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, error) {
-	jwtToken, err := jwt.parseToken(token)
+// AuthenticateToken authenticates the token string and returns the claims.
+func (jwt *Authenticator) AuthenticateToken(tokenString string) (*engine.AuthClaims, error) {
+	jwtToken, err := jwt.parseToken(tokenString)
+
+	if jwtToken == nil {
+		return nil, engine.ErrInvalidToken
+	}
+
 	if err != nil {
-		ve, ok := err.(*jwtSdk.ValidationError)
-		if !ok {
-			return nil, engine.ErrUnauthenticated
-		}
-		if ve.Errors&jwtSdk.ValidationErrorMalformed != 0 {
+		switch {
+		case errors.Is(err, jwtV5.ErrTokenMalformed):
+			return nil, engine.ErrInvalidToken
+		case errors.Is(err, jwtV5.ErrTokenSignatureInvalid):
+			return nil, engine.ErrSignTokenFailed
+		case errors.Is(err, jwtV5.ErrTokenExpired) || errors.Is(err, jwtV5.ErrTokenNotValidYet):
+			return nil, engine.ErrTokenExpired
+		default:
 			return nil, engine.ErrInvalidToken
 		}
-		if ve.Errors&(jwtSdk.ValidationErrorExpired|jwtSdk.ValidationErrorNotValidYet) != 0 {
-			return nil, engine.ErrTokenExpired
-		}
-		return nil, engine.ErrInvalidToken
 	}
 
 	if !jwtToken.Valid {
@@ -66,7 +73,7 @@ func (jwt *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, e
 		return nil, engine.ErrInvalidClaims
 	}
 
-	claims, ok := jwtToken.Claims.(jwtSdk.MapClaims)
+	claims, ok := jwtToken.Claims.(jwtV5.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}
@@ -79,6 +86,7 @@ func (jwt *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, e
 	return authClaims, nil
 }
 
+// CreateIdentityWithContext creates a signed token string from the claims and sets it to the context.
 func (jwt *Authenticator) CreateIdentityWithContext(ctx context.Context, contextType engine.ContextType, claims engine.AuthClaims) (context.Context, error) {
 	strToken, err := jwt.CreateIdentity(claims)
 	if err != nil {
@@ -90,8 +98,9 @@ func (jwt *Authenticator) CreateIdentityWithContext(ctx context.Context, context
 	return ctx, nil
 }
 
+// CreateIdentity creates a signed token string from the claims.
 func (jwt *Authenticator) CreateIdentity(claims engine.AuthClaims) (string, error) {
-	jwtToken := jwtSdk.NewWithClaims(jwt.options.signingMethod, utils.AuthClaimsToJwtClaims(claims))
+	jwtToken := jwtV5.NewWithClaims(jwt.options.signingMethod, utils.AuthClaimsToJwtClaims(claims))
 
 	strToken, err := jwt.generateToken(jwtToken)
 	if err != nil {
@@ -103,15 +112,17 @@ func (jwt *Authenticator) CreateIdentity(claims engine.AuthClaims) (string, erro
 
 func (jwt *Authenticator) Close() {}
 
-func (jwt *Authenticator) parseToken(token string) (*jwtSdk.Token, error) {
+// parseToken parses the token string and returns the token.
+func (jwt *Authenticator) parseToken(token string) (*jwtV5.Token, error) {
 	if jwt.options.keyFunc == nil {
 		return nil, engine.ErrMissingKeyFunc
 	}
 
-	return jwtSdk.Parse(token, jwt.options.keyFunc)
+	return jwtV5.Parse(token, jwt.options.keyFunc)
 }
 
-func (jwt *Authenticator) generateToken(jwtToken *jwtSdk.Token) (string, error) {
+// generateToken generates a signed token string from the token.
+func (jwt *Authenticator) generateToken(jwtToken *jwtV5.Token) (string, error) {
 	if jwt.options.keyFunc == nil {
 		return "", engine.ErrMissingKeyFunc
 	}

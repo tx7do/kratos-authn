@@ -1,14 +1,14 @@
 package oidc
 
 import (
-	"github.com/golang-jwt/jwt/v4"
+	jwtV5 "github.com/golang-jwt/jwt/v5"
 )
 
 type Options struct {
 	IssuerURL string
 	Audience  string
 
-	signingMethod jwt.SigningMethod
+	signingMethod jwtV5.SigningMethod
 }
 
 type Option func(d *Options)
@@ -30,6 +30,6 @@ func WithAudience(audience string) Option {
 // WithSigningMethod set signing method
 func WithSigningMethod(alg string) Option {
 	return func(o *Options) {
-		o.signingMethod = jwt.GetSigningMethod(alg)
+		o.signingMethod = jwtV5.GetSigningMethod(alg)
 	}
 }

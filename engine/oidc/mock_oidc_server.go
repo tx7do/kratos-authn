@@ -1,20 +1,23 @@
 package oidc
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
-	"net/http"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v4"
+	"math/big"
+	"net/http"
+
+	"crypto/rand"
+	"crypto/rsa"
+
+	"encoding/base64"
+	"encoding/json"
+
+	jwtV5 "github.com/golang-jwt/jwt/v5"
 )
 
-type mockOidcServer struct {
+type MockOidcServer struct {
 	issuerURL  string
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
@@ -22,13 +25,13 @@ type mockOidcServer struct {
 
 const kidHeader = "1"
 
-func NewMockOidcServer(issuerURL string) (*mockOidcServer, error) {
+func NewMockOidcServer(issuerURL string) (*MockOidcServer, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
 		return nil, err
 	}
 
-	mockServer := &mockOidcServer{
+	mockServer := &MockOidcServer{
 		issuerURL:  issuerURL,
 		privateKey: privateKey,
 		publicKey:  privateKey.Public().(*rsa.PublicKey),
@@ -38,7 +41,7 @@ func NewMockOidcServer(issuerURL string) (*mockOidcServer, error) {
 	return mockServer, nil
 }
 
-func (server mockOidcServer) start() {
+func (server MockOidcServer) start() {
 	http.HandleFunc("/.well-known/openid-configuration", server.handleGetConfiguration)
 	http.HandleFunc("/oidc/jwks", server.handleGetJWKS)
 	http.HandleFunc("/oauth2/token", server.handleGetToken)
@@ -50,7 +53,7 @@ func (server mockOidcServer) start() {
 	}()
 }
 
-func (server mockOidcServer) handleGetConfiguration(w http.ResponseWriter, r *http.Request) {
+func (server MockOidcServer) handleGetConfiguration(w http.ResponseWriter, _ *http.Request) {
 	err := json.NewEncoder(w).Encode(map[string]string{
 		"issuer":                 server.issuerURL,
 		"jwks_uri":               fmt.Sprintf("%s/oidc/jwks", server.issuerURL),
@@ -64,7 +67,7 @@ func (server mockOidcServer) handleGetConfiguration(w http.ResponseWriter, r *ht
 	}
 }
 
-func (server mockOidcServer) handleGetJWKS(w http.ResponseWriter, r *http.Request) {
+func (server MockOidcServer) handleGetJWKS(w http.ResponseWriter, _ *http.Request) {
 	err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"keys": []map[string]string{
 			{
@@ -82,7 +85,7 @@ func (server mockOidcServer) handleGetJWKS(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (server mockOidcServer) handleGetToken(w http.ResponseWriter, r *http.Request) {
+func (server MockOidcServer) handleGetToken(w http.ResponseWriter, _ *http.Request) {
 	var err error
 	token, err := server.GetToken("kratos.dev", "user")
 
@@ -98,12 +101,12 @@ func (server mockOidcServer) handleGetToken(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (server mockOidcServer) handleGetUserInfo(w http.ResponseWriter, r *http.Request) {
+func (server MockOidcServer) handleGetUserInfo(_ http.ResponseWriter, _ *http.Request) {
 
 }
 
-func (server mockOidcServer) GetToken(audience, subject string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.RegisteredClaims{
+func (server MockOidcServer) GetToken(audience, subject string) (string, error) {
+	token := jwtV5.NewWithClaims(jwtV5.SigningMethodRS256, jwtV5.RegisteredClaims{
 		Issuer:   server.issuerURL,
 		Audience: []string{audience},
 		Subject:  subject,

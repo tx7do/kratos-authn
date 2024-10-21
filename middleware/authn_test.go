@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	jwtV5 "github.com/golang-jwt/jwt/v5"
+
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/transport"
-
-	jwt4 "github.com/golang-jwt/jwt/v4"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/jwt"
@@ -22,6 +23,16 @@ type headerCarrier http.Header
 func (hc headerCarrier) Get(key string) string { return http.Header(hc).Get(key) }
 
 func (hc headerCarrier) Set(key string, value string) { http.Header(hc).Set(key, value) }
+
+// Add append value to key-values pair.
+func (hc headerCarrier) Add(key string, value string) {
+	http.Header(hc).Add(key, value)
+}
+
+// Values returns a slice of values associated with the passed key.
+func (hc headerCarrier) Values(key string) []string {
+	return http.Header(hc).Values(key)
+}
 
 // Keys lists the keys stored in this carrier.
 func (hc headerCarrier) Keys() []string {
@@ -66,9 +77,9 @@ func (tr *Transport) ReplyHeader() transport.Header {
 }
 
 func generateJwtKey(key, sub string) string {
-	mapClaims := jwt4.MapClaims{}
+	mapClaims := jwtV5.MapClaims{}
 	mapClaims["sub"] = sub
-	claims := jwt4.NewWithClaims(jwt4.SigningMethodHS256, mapClaims)
+	claims := jwtV5.NewWithClaims(jwtV5.SigningMethodHS256, mapClaims)
 	token, _ := claims.SignedString([]byte(key))
 	return token
 }

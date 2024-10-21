@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v4"
+	jwtV5 "github.com/golang-jwt/jwt/v5"
+
 	"github.com/tx7do/kratos-authn/engine"
 )
 
-func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwt.Claims {
-	claims := jwt.MapClaims{
+func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwtV5.Claims {
+	claims := jwtV5.MapClaims{
 		"sub": raw.Subject,
 	}
 
@@ -31,7 +32,7 @@ func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwt.Claims {
 	return claims
 }
 
-func MapClaimsToAuthClaims(rawClaims jwt.MapClaims) (*engine.AuthClaims, error) {
+func MapClaimsToAuthClaims(rawClaims jwtV5.MapClaims) (*engine.AuthClaims, error) {
 	// optional subject
 	var subject = ""
 	if subjectClaim, ok := rawClaims["sub"]; ok {
@@ -58,8 +59,8 @@ func MapClaimsToAuthClaims(rawClaims jwt.MapClaims) (*engine.AuthClaims, error) 
 	return claims, nil
 }
 
-func JwtClaimsToAuthClaims(rawClaims jwt.Claims) (*engine.AuthClaims, error) {
-	claims, ok := rawClaims.(jwt.MapClaims)
+func JwtClaimsToAuthClaims(rawClaims jwtV5.Claims) (*engine.AuthClaims, error) {
+	claims, ok := rawClaims.(jwtV5.MapClaims)
 	if !ok {
 		return nil, engine.ErrInvalidClaims
 	}

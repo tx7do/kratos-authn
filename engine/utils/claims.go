@@ -20,7 +20,7 @@ func AuthClaimsToJwtClaims(raw engine.AuthClaims) jwtV5.Claims {
 	if raw.Audience != "" {
 		claims["aud"] = raw.Audience
 	}
-	if raw.Expiration != "" {
+	if raw.Expiration != 0 {
 		claims["exp"] = raw.Expiration
 	}
 
@@ -67,7 +67,7 @@ func MapClaimsToAuthClaims(rawClaims jwtV5.MapClaims) (*engine.AuthClaims, error
 	}
 	// optional Expiration
 	if expirationClaim, ok := rawClaims["exp"]; ok {
-		if claims.Expiration, ok = expirationClaim.(string); !ok {
+		if claims.Expiration, ok = expirationClaim.(float64); !ok {
 			return nil, engine.ErrInvalidExpiration
 		}
 	}

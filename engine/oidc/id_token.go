@@ -1,14 +1,16 @@
 package oidc
 
 import (
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hash"
 	"time"
+
+	"crypto/sha256"
+	"crypto/sha512"
+
+	"encoding/base64"
+	"encoding/json"
 
 	"github.com/tx7do/kratos-authn/engine"
 )

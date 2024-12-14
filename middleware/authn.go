@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware"
 
@@ -15,7 +16,7 @@ func Server(authenticator engine.Authenticator) middleware.Middleware {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			claims, err := authenticator.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 			if err != nil {
-				return nil, err
+				return nil, errors.Unauthorized(reason, err.Error())
 			}
 
 			ctx = engine.ContextWithAuthClaims(ctx, claims)

@@ -10,7 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.10.0
-	github.com/tx7do/kratos-authn v1.1.3
+	github.com/tx7do/kratos-authn v1.1.5
 )
 
 require (

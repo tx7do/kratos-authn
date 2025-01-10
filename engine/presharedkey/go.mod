@@ -9,7 +9,7 @@ replace github.com/tx7do/kratos-authn => ../../
 require (
 	github.com/go-kratos/kratos/v2 v2.8.3
 	github.com/stretchr/testify v1.10.0
-	github.com/tx7do/kratos-authn v1.1.2
+	github.com/tx7do/kratos-authn v1.1.3
 )
 
 require (

@@ -1,5 +1,8 @@
 echo off
 
+go get all
+go mod tidy
+
 ::指定起始文件夹
 set DIR="%cd%\..\engine"
 

@@ -81,6 +81,93 @@ func (c *AuthClaims) GetClaimStrings(key string) (jwtV5.ClaimStrings, error) {
 	return c.parseClaimsString(key)
 }
 
+func (c *AuthClaims) GetInt(key string) (int, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[int](raw)
+}
+func (c *AuthClaims) GetInt8(key string) (int8, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[int8](raw)
+}
+func (c *AuthClaims) GetInt16(key string) (int16, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[int16](raw)
+}
+func (c *AuthClaims) GetInt32(key string) (int32, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[int32](raw)
+}
+func (c *AuthClaims) GetInt64(key string) (int64, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[int64](raw)
+}
+
+func (c *AuthClaims) GetUint(key string) (uint, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[uint](raw)
+}
+func (c *AuthClaims) GetUint8(key string) (uint8, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[uint8](raw)
+}
+func (c *AuthClaims) GetUint16(key string) (uint16, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[uint16](raw)
+}
+func (c *AuthClaims) GetUint32(key string) (uint32, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[uint32](raw)
+}
+func (c *AuthClaims) GetUint64(key string) (uint64, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[uint64](raw)
+}
+
+func (c *AuthClaims) GetFloat32(key string) (float32, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[float32](raw)
+}
+func (c *AuthClaims) GetFloat64(key string) (float64, error) {
+	raw, ok := (*c)[key]
+	if !ok {
+		return 0, nil
+	}
+	return parseNumber[float64](raw)
+}
+
 func (c *AuthClaims) parseString(key string) (string, error) {
 	var (
 		ok  bool
@@ -172,4 +259,25 @@ func (c *AuthClaims) parseClaimsString(key string) (jwtV5.ClaimStrings, error) {
 func newNumericDateFromSeconds(f float64) *jwtV5.NumericDate {
 	round, frac := math.Modf(f)
 	return jwtV5.NewNumericDate(time.Unix(int64(round), int64(frac*1e9)))
+}
+
+func parseNumber[R float32 | float64 | int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64](value interface{}) (R, error) {
+	if value == nil {
+		return 0, nil
+	}
+
+	switch v := value.(type) {
+	case float32:
+		return R(v), nil
+	case float64:
+		return R(v), nil
+	case json.Number:
+		f, err := v.Float64()
+		if err != nil {
+			return 0, err
+		}
+		return R(f), nil
+	default:
+		return 0, ErrorInvalidType
+	}
 }

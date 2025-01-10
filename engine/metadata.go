@@ -1,4 +1,4 @@
-package utils
+package engine
 
 import (
 	"context"
@@ -10,16 +10,14 @@ import (
 
 	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-
-	"github.com/tx7do/kratos-authn/engine"
 )
 
 // MDWithAuth .
-func MDWithAuth(ctx context.Context, expectedScheme string, tokenStr string, ctxType engine.ContextType) context.Context {
+func MDWithAuth(ctx context.Context, expectedScheme string, tokenStr string, ctxType ContextType) context.Context {
 	switch ctxType {
-	case engine.ContextTypeGrpc:
+	case ContextTypeGrpc:
 		return injectTokenToGrpcContext(ctx, expectedScheme, tokenStr)
-	case engine.ContextTypeKratosMetaData:
+	case ContextTypeKratosMetaData:
 		return injectTokenToKratosContext(ctx, expectedScheme, tokenStr)
 	default:
 		return injectTokenToGrpcContext(ctx, expectedScheme, tokenStr)
@@ -27,7 +25,7 @@ func MDWithAuth(ctx context.Context, expectedScheme string, tokenStr string, ctx
 }
 
 // AuthFromMD .
-func AuthFromMD(ctx context.Context, expectedScheme string, ctxType engine.ContextType) (string, error) {
+func AuthFromMD(ctx context.Context, expectedScheme string, ctxType ContextType) (string, error) {
 	val := extractTokenFromContext(ctx, ctxType)
 	if val == "" {
 		return "", status.Errorf(codes.Unauthenticated, "Request unauthenticated with "+expectedScheme)
@@ -56,11 +54,11 @@ func extractTokenFromKratosContext(ctx context.Context) string {
 	return ""
 }
 
-func extractTokenFromContext(ctx context.Context, ctxType engine.ContextType) string {
+func extractTokenFromContext(ctx context.Context, ctxType ContextType) string {
 	switch ctxType {
-	case engine.ContextTypeGrpc:
+	case ContextTypeGrpc:
 		return extractTokenFromGrpcContext(ctx)
-	case engine.ContextTypeKratosMetaData:
+	case ContextTypeKratosMetaData:
 		return extractTokenFromKratosContext(ctx)
 	default:
 		return extractTokenFromGrpcContext(ctx)

@@ -11,7 +11,7 @@ type Option func(d *Options)
 // WithKeys set key set
 func WithKeys(validKeys []string) Option {
 	return func(o *Options) {
-		vKeys := make(KeySet, 0)
+		vKeys := make(KeySet)
 		for _, k := range validKeys {
 			vKeys[k] = true
 		}

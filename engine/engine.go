@@ -4,13 +4,6 @@ import (
 	"context"
 )
 
-type ContextType int
-
-const (
-	ContextTypeGrpc = iota
-	ContextTypeKratosMetaData
-)
-
 // Authenticator interface
 type Authenticator interface {
 	// Authenticate returns a nil error and the AuthClaims info (if available).

@@ -15,7 +15,6 @@ import (
 
 	"github.com/tx7do/kratos-authn/engine"
 	"github.com/tx7do/kratos-authn/engine/jwt"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 type headerCarrier http.Header
@@ -45,7 +44,7 @@ func (hc headerCarrier) Keys() []string {
 
 func newTokenHeader(headerKey string, token string) *headerCarrier {
 	header := &headerCarrier{}
-	header.Set(headerKey, fmt.Sprintf("%s %s", utils.BearerWord, token))
+	header.Set(headerKey, fmt.Sprintf("%s %s", engine.BearerWord, token))
 	return header
 }
 
@@ -98,7 +97,7 @@ func TestServer(t *testing.T) {
 	}{
 		{
 			name:      "normal",
-			ctx:       transport.NewServerContext(context.Background(), &Transport{reqHeader: newTokenHeader(utils.HeaderAuthorize, token)}),
+			ctx:       transport.NewServerContext(context.Background(), &Transport{reqHeader: newTokenHeader(engine.HeaderAuthorize, token)}),
 			alg:       "HS256",
 			exceptErr: nil,
 			key:       testKey,
@@ -113,7 +112,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "token invalid",
 			ctx: transport.NewServerContext(context.Background(), &Transport{
-				reqHeader: newTokenHeader(utils.HeaderAuthorize, "12313123"),
+				reqHeader: newTokenHeader(engine.HeaderAuthorize, "12313123"),
 			}),
 			alg:       "HS256",
 			exceptErr: engine.ErrInvalidToken,
@@ -121,7 +120,7 @@ func TestServer(t *testing.T) {
 		},
 		{
 			name:      "method invalid",
-			ctx:       transport.NewServerContext(context.Background(), &Transport{reqHeader: newTokenHeader(utils.HeaderAuthorize, token)}),
+			ctx:       transport.NewServerContext(context.Background(), &Transport{reqHeader: newTokenHeader(engine.HeaderAuthorize, token)}),
 			alg:       "ES384",
 			exceptErr: engine.ErrUnsupportedSigningMethod,
 			key:       testKey,
@@ -177,7 +176,7 @@ func TestClient(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			next := func(ctx context.Context, req interface{}) (interface{}, error) {
 				if header, ok := transport.FromClientContext(ctx); ok {
-					t.Log(header.RequestHeader().Get(utils.HeaderAuthorize))
+					t.Log(header.RequestHeader().Get(engine.HeaderAuthorize))
 				}
 				return "reply", nil
 			}
@@ -188,12 +187,12 @@ func TestClient(t *testing.T) {
 			)
 			assert.Nil(t, err)
 
+			scopes := []string{"local:admin:user_name", "tenant:admin:user_name"}
+
 			principal := engine.AuthClaims{
-				Subject: "user_name",
-				Scopes:  make(engine.ScopeSet),
+				engine.ClaimFieldSubject: "user_name",
+				engine.ClaimFieldScope:   scopes,
 			}
-			principal.Scopes["local:admin:user_name"] = true
-			principal.Scopes["tenant:admin:user_name"] = true
 
 			client := Client(authenticator, WithAuthClaims(principal))(next)
 			header := &headerCarrier{}

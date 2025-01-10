@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 //var (
@@ -64,7 +63,7 @@ func (a *Authenticator) parseToken(token string) (*jwtV5.Token, error) {
 }
 
 func (a *Authenticator) Authenticate(requestContext context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
-	tokenString, err := utils.AuthFromMD(requestContext, utils.BearerWord, contextType)
+	tokenString, err := engine.AuthFromMD(requestContext, engine.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
@@ -126,12 +125,9 @@ func (a *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, err
 		}
 	}
 
-	principal, err := utils.MapClaimsToAuthClaims(claims)
-	if err != nil {
-		return nil, err
-	}
+	authClaim := engine.AuthClaims(claims)
 
-	return principal, nil
+	return &authClaim, nil
 }
 
 func (a *Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {

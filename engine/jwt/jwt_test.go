@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 type headerCarrier http.Header
@@ -65,23 +64,26 @@ func TestAuthenticator(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
+	scopes := []string{"local:admin:user_name", "tenant:admin:user_name"}
+
 	principal := engine.AuthClaims{
-		Subject: "user_name",
-		Scopes:  make(engine.ScopeSet),
+		engine.ClaimFieldSubject: "user_name",
+		engine.ClaimFieldScope:   scopes,
 	}
-	principal.Scopes["local:admin:user_name"] = true
-	principal.Scopes["tenant:admin:user_name"] = true
 
 	outToken, err := auth.CreateIdentity(principal)
 	assert.Nil(t, err)
-	assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6ImxvY2FsOmFkbWluOnVzZXJfbmFtZSB0ZW5hbnQ6YWRtaW46dXNlcl9uYW1lIiwic3ViIjoidXNlcl9uYW1lIn0.ln7zjnOKrhZCsAaQQf6vodIz5urxkVphOo7EpI7tv7Y", outToken)
+	assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJsb2NhbDphZG1pbjp1c2VyX25hbWUiLCJ0ZW5hbnQ6YWRtaW46dXNlcl9uYW1lIl0sInN1YiI6InVzZXJfbmFtZSJ9.xIzbQbQSlzdms5ZVaHrg6pZohDlt0DTYopobUo2qqQw", outToken)
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
 
 	var token string
 	if header, ok := transport.FromClientContext(ctx); ok {
 		str := header.RequestHeader().Get("Authorization")
 		splits := strings.SplitN(str, " ", 2)
 		assert.Equal(t, 2, len(splits))
-		assert.Equal(t, utils.BearerWord, splits[0])
+		assert.Equal(t, engine.BearerWord, splits[0])
 		token = str
 		//fmt.Println(token)
 	}
@@ -92,8 +94,13 @@ func TestAuthenticator(t *testing.T) {
 
 	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
-	assert.Equal(t, "user_name", authToken.Subject)
-	assert.True(t, authToken.Scopes["local:admin:user_name"])
-	assert.True(t, authToken.Scopes["tenant:admin:user_name"])
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+
+	scopesOut, _ := authToken.GetScopes()
+	assert.Equal(t, 2, len(scopesOut))
+	assert.Equal(t, "local:admin:user_name", scopesOut[0])
+	assert.Equal(t, "tenant:admin:user_name", scopesOut[1])
 	fmt.Println(authToken)
 }

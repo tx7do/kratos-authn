@@ -12,7 +12,6 @@ import (
 	"github.com/go-kratos/kratos/v2/transport"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 type headerCarrier http.Header
@@ -79,12 +78,15 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 	fmt.Println(trustedToken)
 
 	if header, ok := transport.FromServerContext(ctx); ok {
-		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+trustedToken)
+		header.RequestHeader().Set("Authorization", engine.BearerWord+" "+trustedToken)
 	}
 
 	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
-	assert.Equal(t, "user_name", authToken.Subject)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+
 	fmt.Println(authToken)
 }
 
@@ -108,7 +110,7 @@ func TestBuildServerWithOIDCAuthentication(t *testing.T) {
 	defer cancel()
 
 	if header, ok := transport.FromServerContext(ctx); ok {
-		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+trustedToken)
+		header.RequestHeader().Set("Authorization", engine.BearerWord+" "+trustedToken)
 	}
 
 	auth, err := NewAuthenticator(

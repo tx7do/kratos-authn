@@ -6,7 +6,6 @@ import (
 	"math/rand"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 type Authenticator struct {
@@ -32,7 +31,7 @@ func NewAuthenticator(opts ...Option) (engine.Authenticator, error) {
 }
 
 func (pka *Authenticator) Authenticate(ctx context.Context, contextType engine.ContextType) (*engine.AuthClaims, error) {
-	tokenString, err := utils.AuthFromMD(ctx, utils.BearerWord, contextType)
+	tokenString, err := engine.AuthFromMD(ctx, engine.BearerWord, contextType)
 	if err != nil {
 		return nil, engine.ErrMissingBearerToken
 	}
@@ -46,9 +45,7 @@ func (pka *Authenticator) AuthenticateToken(token string) (*engine.AuthClaims, e
 	}
 
 	if _, found := pka.options.ValidKeys[token]; found {
-		return &engine.AuthClaims{
-			Subject: "",
-		}, nil
+		return &engine.AuthClaims{}, nil
 	}
 
 	return nil, engine.ErrUnauthenticated
@@ -76,7 +73,7 @@ func (pka *Authenticator) CreateIdentityWithContext(ctx context.Context, context
 	if err != nil {
 		return ctx, err
 	}
-	ctx = utils.MDWithAuth(ctx, utils.BearerWord, token, contextType)
+	ctx = engine.MDWithAuth(ctx, engine.BearerWord, token, contextType)
 	return ctx, nil
 }
 

@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tx7do/kratos-authn/engine"
-	"github.com/tx7do/kratos-authn/engine/utils"
 )
 
 type headerCarrier http.Header
@@ -67,10 +66,7 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
 
-	principal := engine.AuthClaims{
-		Subject: "",
-		Scopes:  make(engine.ScopeSet),
-	}
+	principal := engine.AuthClaims{}
 
 	outToken, err := auth.CreateIdentity(principal)
 	assert.Nil(t, err)
@@ -80,16 +76,18 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 		str := header.RequestHeader().Get("Authorization")
 		splits := strings.SplitN(str, " ", 2)
 		assert.Equal(t, 2, len(splits))
-		assert.Equal(t, utils.BearerWord, splits[0])
+		assert.Equal(t, engine.BearerWord, splits[0])
 		//fmt.Println(token)
 	}
 
 	if header, ok := transport.FromServerContext(ctx); ok {
-		header.RequestHeader().Set("Authorization", utils.BearerWord+" "+token)
+		header.RequestHeader().Set("Authorization", engine.BearerWord+" "+token)
 	}
 
 	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
 	assert.Nil(t, err)
-	assert.Equal(t, "", authToken.Subject)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "", sub)
 	fmt.Println(authToken)
 }

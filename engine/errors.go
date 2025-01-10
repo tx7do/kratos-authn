@@ -8,12 +8,18 @@ import (
 type AuthErrorCode int32
 
 const (
-	AuthErrorCodeInvalidClaims                AuthErrorCode = 1001
-	AuthErrorCodeAuthFailedInvalidBearerToken AuthErrorCode = 1002
-	AuthErrorCodeAuthFailedInvalidSubject     AuthErrorCode = 1003
-	AuthErrorCodeAuthFailedInvalidAudience    AuthErrorCode = 1004
-	AuthErrorCodeAuthFailedInvalidIssuer      AuthErrorCode = 1005
-	AuthErrorCodeAuthFailedInvalidExpiration  AuthErrorCode = 1006
+	AuthErrorCodeInvalidType AuthErrorCode = 500
+
+	AuthErrorCodeInvalidJwtID                 AuthErrorCode = 1001
+	AuthErrorCodeMissingJwtId                 AuthErrorCode = 1002
+	AuthErrorCodeInvalidClaims                AuthErrorCode = 1003
+	AuthErrorCodeAuthFailedInvalidBearerToken AuthErrorCode = 1004
+	AuthErrorCodeAuthFailedInvalidSubject     AuthErrorCode = 1005
+	AuthErrorCodeAuthFailedInvalidAudience    AuthErrorCode = 1006
+	AuthErrorCodeAuthFailedInvalidIssuer      AuthErrorCode = 1007
+	AuthErrorCodeAuthFailedInvalidExpiration  AuthErrorCode = 1008
+	AuthErrorCodeAuthFailedInvalidNotBefore   AuthErrorCode = 1009
+	AuthErrorCodeAuthFailedInvalidIssuedAt    AuthErrorCode = 1010
 
 	AuthErrorCodeUnauthenticated          AuthErrorCode = 1500
 	AuthErrorCodeBearerTokenMissing       AuthErrorCode = 1010
@@ -28,10 +34,16 @@ const (
 )
 
 var (
+	ErrorInvalidType = status.Error(codes.Code(AuthErrorCodeInvalidType), "invalid type")
+
+	ErrInvalidJwtID      = status.Error(codes.Code(AuthErrorCodeInvalidJwtID), "invalid jwt id")
+	ErrMissingJwtId      = status.Error(codes.Code(AuthErrorCodeMissingJwtId), "jwt id missing")
 	ErrInvalidSubject    = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidSubject), "invalid subject")
 	ErrInvalidAudience   = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidAudience), "invalid audience")
 	ErrInvalidIssuer     = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidIssuer), "invalid issuer")
 	ErrInvalidExpiration = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidExpiration), "invalid expiration")
+	ErrInvalidNotBefore  = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidNotBefore), "invalid not before")
+	ErrInvalidIssuedAt   = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidIssuedAt), "invalid issued at")
 	ErrInvalidClaims     = status.Error(codes.Code(AuthErrorCodeInvalidClaims), "invalid claims")
 	ErrInvalidToken      = status.Error(codes.Code(AuthErrorCodeAuthFailedInvalidBearerToken), "invalid bearer token")
 

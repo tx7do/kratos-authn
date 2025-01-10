@@ -11,17 +11,11 @@ type Authenticator struct{}
 var _ engine.Authenticator = (*Authenticator)(nil)
 
 func (n Authenticator) Authenticate(_ context.Context, _ engine.ContextType) (*engine.AuthClaims, error) {
-	return &engine.AuthClaims{
-		Subject: "",
-		Scopes:  nil,
-	}, nil
+	return &engine.AuthClaims{}, nil
 }
 
 func (n Authenticator) AuthenticateToken(_ string) (*engine.AuthClaims, error) {
-	return &engine.AuthClaims{
-		Subject: "",
-		Scopes:  nil,
-	}, nil
+	return &engine.AuthClaims{}, nil
 }
 
 func (n Authenticator) CreateIdentityWithContext(ctx context.Context, _ engine.ContextType, _ engine.AuthClaims) (context.Context, error) {

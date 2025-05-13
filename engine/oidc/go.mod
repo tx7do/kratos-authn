@@ -1,30 +1,30 @@
 module github.com/tx7do/kratos-authn/engine/oidc
 
-go 1.22.7
+go 1.23.0
 
-toolchain go1.23.3
+toolchain go1.24.3
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.3.8
-	github.com/go-kratos/kratos/v2 v2.8.3
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/MicahParks/keyfunc/v3 v3.3.11
+	github.com/go-kratos/kratos/v2 v2.8.4
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.10.0
 	github.com/tx7do/kratos-authn v1.1.5
 )
 
 require (
-	github.com/MicahParks/jwkset v0.7.0 // indirect
+	github.com/MicahParks/jwkset v0.9.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-playground/form/v4 v4.2.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/time v0.9.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
-	google.golang.org/grpc v1.69.2 // indirect
-	google.golang.org/protobuf v1.36.2 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/time v0.11.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
+	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

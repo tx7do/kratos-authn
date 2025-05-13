@@ -271,6 +271,29 @@ func parseNumber[R float32 | float64 | int | int8 | int16 | int32 | int64 | uint
 		return R(v), nil
 	case float64:
 		return R(v), nil
+
+	case int:
+		return R(v), nil
+	case int8:
+		return R(v), nil
+	case int16:
+		return R(v), nil
+	case int32:
+		return R(v), nil
+	case int64:
+		return R(v), nil
+
+	case uint:
+		return R(v), nil
+	case uint8:
+		return R(v), nil
+	case uint16:
+		return R(v), nil
+	case uint32:
+		return R(v), nil
+	case uint64:
+		return R(v), nil
+
 	case json.Number:
 		f, err := v.Float64()
 		if err != nil {

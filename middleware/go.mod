@@ -13,7 +13,7 @@ require (
 	github.com/go-kratos/kratos/v2 v2.8.4
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/stretchr/testify v1.10.0
-	github.com/tx7do/kratos-authn v1.1.5
+	github.com/tx7do/kratos-authn v1.1.6
 	github.com/tx7do/kratos-authn/engine/jwt v1.1.5
 )
 

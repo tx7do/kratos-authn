@@ -10,7 +10,7 @@ import (
 	"github.com/tx7do/kratos-authn/engine"
 )
 
-// Server is a server authenticator middleware.
+// Server is server authenticator middleware.
 func Server(authenticator engine.Authenticator) middleware.Middleware {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
@@ -26,7 +26,7 @@ func Server(authenticator engine.Authenticator) middleware.Middleware {
 	}
 }
 
-// Client is a client authenticator middleware.
+// Client is client authenticator middleware.
 func Client(authenticator engine.Authenticator, opts ...Option) middleware.Middleware {
 	o := &options{}
 	for _, opt := range opts {

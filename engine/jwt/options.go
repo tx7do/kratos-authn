@@ -19,7 +19,7 @@ func WithSigningMethod(alg string) Option {
 }
 
 // WithKey set key
-func WithKey(key []byte) Option {
+func WithKey(key interface{}) Option {
 	return func(o *Options) {
 		o.keyFunc = func(token *jwtV5.Token) (interface{}, error) {
 			return key, nil

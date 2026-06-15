@@ -122,16 +122,11 @@ func (a *Authenticator) parseToken(token string) (*jwtV5.Token, error) {
 
 // generateToken generates a signed token string from the token.
 func (a *Authenticator) generateToken(jwtToken *jwtV5.Token) (string, error) {
-	if a.options.keyFunc == nil {
+	if a.options.signingKey == nil {
 		return "", engine.ErrMissingKeyFunc
 	}
 
-	key, err := a.options.keyFunc(jwtToken)
-	if err != nil {
-		return "", engine.ErrGetKeyFailed
-	}
-
-	strToken, err := jwtToken.SignedString(key)
+	strToken, err := jwtToken.SignedString(a.options.signingKey)
 	if err != nil {
 		return "", engine.ErrSignTokenFailed
 	}

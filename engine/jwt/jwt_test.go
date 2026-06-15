@@ -2,6 +2,13 @@ package jwt
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"strings"
@@ -103,4 +110,297 @@ func TestAuthenticator(t *testing.T) {
 	assert.Equal(t, "local:admin:user_name", scopesOut[0])
 	assert.Equal(t, "tenant:admin:user_name", scopesOut[1])
 	fmt.Println(authToken)
+}
+
+func TestAuthenticatorRS256(t *testing.T) {
+	// Generate RSA key pair for testing
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err)
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("RS256"),
+		WithSigningKey(privateKey),
+		WithVerificationKey(&privateKey.PublicKey),
+	)
+	assert.Nil(t, err)
+
+	scopes := []string{"local:admin:user_name", "tenant:admin:user_name"}
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+		engine.ClaimFieldScope:   scopes,
+	}
+
+	outToken, err := auth.CreateIdentity(principal)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, outToken)
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		str := header.RequestHeader().Get("Authorization")
+		splits := strings.SplitN(str, " ", 2)
+		assert.Equal(t, 2, len(splits))
+		assert.Equal(t, engine.BearerWord, splits[0])
+		token = str
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+
+	scopesOut, _ := authToken.GetScopes()
+	assert.Equal(t, 2, len(scopesOut))
+	assert.Equal(t, "local:admin:user_name", scopesOut[0])
+	assert.Equal(t, "tenant:admin:user_name", scopesOut[1])
+	fmt.Println(authToken)
+}
+
+func TestAuthenticatorRS256WithPEM(t *testing.T) {
+	// Generate RSA key pair for testing
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err)
+
+	// Marshal keys to PEM format
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	assert.Nil(t, err)
+	publicKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubKeyBytes,
+	})
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("RS256"),
+		WithPrivateKeyFromPEM(privateKeyPEM),
+		WithPublicKeyFromPEM(publicKeyPEM),
+	)
+	assert.Nil(t, err)
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+	}
+
+	outToken, err := auth.CreateIdentity(principal)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, outToken)
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		str := header.RequestHeader().Get("Authorization")
+		splits := strings.SplitN(str, " ", 2)
+		assert.Equal(t, 2, len(splits))
+		assert.Equal(t, engine.BearerWord, splits[0])
+		token = str
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+}
+
+func TestAuthenticatorES256(t *testing.T) {
+	// Generate ECDSA key pair for testing (P-256 curve for ES256)
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	assert.Nil(t, err)
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("ES256"),
+		WithSigningKey(privateKey),
+		WithVerificationKey(&privateKey.PublicKey),
+	)
+	assert.Nil(t, err)
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+	}
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		token = header.RequestHeader().Get("Authorization")
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+}
+
+func TestAuthenticatorES256WithPEM(t *testing.T) {
+	// Generate ECDSA key pair (P-256 curve for ES256)
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	assert.Nil(t, err)
+
+	// Marshal to PEM
+	privKeyBytes, err := x509.MarshalECPrivateKey(privateKey)
+	assert.Nil(t, err)
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: privKeyBytes,
+	})
+
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	assert.Nil(t, err)
+	publicKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubKeyBytes,
+	})
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("ES256"),
+		WithECPrivateKeyFromPEM(privateKeyPEM),
+		WithECPublicKeyFromPEM(publicKeyPEM),
+	)
+	assert.Nil(t, err)
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+	}
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		token = header.RequestHeader().Get("Authorization")
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+}
+
+func TestAuthenticatorPS256(t *testing.T) {
+	// RSA-PSS uses the same RSA key pair as RS256
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	assert.Nil(t, err)
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("PS256"),
+		WithSigningKey(privateKey),
+		WithVerificationKey(&privateKey.PublicKey),
+	)
+	assert.Nil(t, err)
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+	}
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		token = header.RequestHeader().Get("Authorization")
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
+}
+
+func TestAuthenticatorEdDSA(t *testing.T) {
+	// Generate Ed25519 key pair
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	assert.Nil(t, err)
+
+	ctx := context.Background()
+
+	ctx = transport.NewServerContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+	ctx = transport.NewClientContext(ctx, &myTransporter{reqHeader: headerCarrier{}, replyHeader: headerCarrier{}})
+
+	auth, err := NewAuthenticator(
+		WithSigningMethod("EdDSA"),
+		WithSigningKey(privateKey),
+		WithVerificationKey(publicKey),
+	)
+	assert.Nil(t, err)
+
+	principal := engine.AuthClaims{
+		engine.ClaimFieldSubject: "user_name",
+	}
+
+	ctx, err = auth.CreateIdentityWithContext(ctx, engine.ContextTypeKratosMetaData, principal)
+	assert.Nil(t, err)
+
+	var token string
+	if header, ok := transport.FromClientContext(ctx); ok {
+		token = header.RequestHeader().Get("Authorization")
+	}
+
+	if header, ok := transport.FromServerContext(ctx); ok {
+		header.RequestHeader().Set("Authorization", token)
+	}
+
+	authToken, err := auth.Authenticate(ctx, engine.ContextTypeKratosMetaData)
+	assert.Nil(t, err)
+
+	sub, _ := authToken.GetSubject()
+	assert.Equal(t, "user_name", sub)
 }
